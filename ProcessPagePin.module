@@ -1,0 +1,117 @@
+<?php
+
+/**
+ * ProcessPagePin
+ * ==============
+ *
+ * @website https://github.com/mindplay-dk/ProcessPagePin
+ * @author Rasmus Schultz <http://blog.mindplay.dk/>
+ * @license GPL 3 <http://www.gnu.org/licenses/gpl-3.0.txt>
+ *
+ * This module makes the selected/open item on the Page List "stick" between requests.
+ *
+ * This is a usability enhancement, which essentially makes the PAGES main menu item
+ * return where you came from, rather than starting with the sitemap collapsed.
+ */
+class ProcessPagePin extends WireData implements Module
+{
+  /**
+   * @return array module information
+   */
+  public static function getModuleInfo() {
+    return array(
+      'title' => 'Page Pin', 
+      'version' => 100, 
+      'summary' => 'Improves usability of the Page List by pinning the last open page.',
+      'singular' => true, 
+      'autoload' => true, 
+    );
+  }
+  
+  /**
+   * Initialize the module
+   */
+  public function init()
+  {
+    $this->key = $this->className() . '::pinned';
+    
+    $this->addHookBefore('ProcessPageList::execute', $this, 'hookBeforePageListExecute');
+    $this->addHookBefore('ProcessPageEdit::execute', $this, 'hookBeforePageEdit');
+    $this->addHookBefore('ProcessPageAdd::execute', $this, 'hookBeforePageAdd');
+  }
+  
+  /**
+   * @var string session key for the pinned Page ID
+   */
+  protected $key;
+  
+  /**
+   * @param int $page_id the page ID of the page to pin
+   */
+  protected function pin($page_id)
+  {
+    wire('session')->set($this->key, $page_id);
+  }
+  
+  /**
+   * Before the Page List renders, inject the last pinned Page ID into GET variables.
+   */
+  public function hookBeforePageListExecute(HookEvent $event)
+  {
+    /**
+     * @var Session $session
+     * @var int|null $id
+     */
+    
+    $process = wire('page')->process;
+    
+    $id = null;
+    
+    if ($process === 'ProcessPageList') {
+      $id = intval($this->input->get->open);
+    } else if ($process === 'ProcessPageAdd') {
+      $id = intval($this->input->get->parent_id);
+    } else {
+      return; // this is another page using the ProcessPageList as a component
+    }
+    
+    if ($id) {
+      // Store the ID of the opened Page:
+      $this->pin($id);
+    } else {
+      // Restore the ID of the last opened Page:
+      if (wire('session')->get($this->key)) {
+        $get = $this->input->get();
+        $get->open = wire('session')->get($this->key);
+      }
+    }
+  }
+  
+  /**
+   * When a Page is Edited, pin the Page ID
+   */
+  public function hookBeforePageEdit(HookEvent $event)
+  {
+    /**
+     * @var InputFieldForm $form
+     */
+    
+    $id = intval($this->input->get('id'));
+    
+    if ($id) {
+      $this->pin($id);
+    }
+  }
+  
+  /**
+   * When a new Page is added, pin the parent Page ID
+   */
+  public function hookBeforePageAdd(HookEvent $event)
+  {
+    $id = intval($this->input->get('parent_id'));
+    
+    if ($id) {
+      $this->pin($id);
+    }
+  }
+}
