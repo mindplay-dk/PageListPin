@@ -1,10 +1,10 @@
 <?php
 
 /**
- * ProcessPagePin
+ * PageListPin
  * ==============
  *
- * @website https://github.com/mindplay-dk/ProcessPagePin
+ * @website https://github.com/mindplay-dk/PageListPin
  * @author Rasmus Schultz <http://blog.mindplay.dk/>
  * @license GPL 3 <http://www.gnu.org/licenses/gpl-3.0.txt>
  *
@@ -13,14 +13,14 @@
  * This is a usability enhancement, which essentially makes the PAGES main menu item
  * return where you came from, rather than starting with the sitemap collapsed.
  */
-class ProcessPagePin extends WireData implements Module
+class PageListPin extends WireData implements Module
 {
   /**
    * @return array module information
    */
   public static function getModuleInfo() {
     return array(
-      'title' => 'Page Pin', 
+      'title' => 'Page List Pin', 
       'version' => 100, 
       'summary' => 'Improves usability of the Page List by pinning the last open page.',
       'singular' => true, 

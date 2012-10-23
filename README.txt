@@ -1,5 +1,5 @@
-ProcessPagePin
---------------
+PageListPin
+-----------
 
 Usability module for ProcessWire.
 
